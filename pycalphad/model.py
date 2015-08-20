@@ -8,6 +8,7 @@ from sympy import log, Add, Mul, Piecewise, Pow, S, Symbol
 from tinydb import where
 import pycalphad.variables as v
 from pycalphad.log import logger
+from collections import OrderedDict
 try:
     set
 except NameError:
@@ -83,7 +84,8 @@ class Model(object):
         if parameters is not None:
             symbols.update([(Symbol(s), val) for s, val in parameters.items()])
 
-        self.models = dict()
+        # OrderedDict for making Model.ast more predictable for caching
+        self.models = OrderedDict()
         self.build_phase(dbe, phase.upper(), symbols, dbe.search)
 
     @property
@@ -414,10 +416,10 @@ class Model(object):
         A = 518/1125 + (11692/15975)*(1/p - 1)
         # factor when tau < 1
         sub_tau = 1 - (1/A) * ((79/(140*p))*(tau**(-1)) + (474/497)*(1/p - 1) \
-            * ((tau**3)/6 + (tau**9)/135 + (tau**15)/600)
+            * ((tau**3.)/6 + (tau**9.)/135 + (tau**15.)/600)
                               )
         # factor when tau >= 1
-        super_tau = -(1/A) * ((tau**-5)/10 + (tau**-15)/315 + (tau**-25)/1500)
+        super_tau = -(1/A) * ((tau**-5.)/10 + (tau**-15.)/315 + (tau**-25.)/1500)
 
         expr_cond_pairs = [(sub_tau, tau < 1),
                            (super_tau, tau >= 1),

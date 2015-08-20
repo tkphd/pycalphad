@@ -87,8 +87,12 @@ def _compute_phase_values(phase_obj, components, variables, statevar_dict,
     statevar_grid = np.meshgrid(*itertools.chain(statevar_dict.values(),
                                                  [np.empty(points.shape[-2])]),
                                 sparse=True, indexing='ij')[:-1]
+    # Workaround for calculation problem at endmembers (Theano/Theano#2995 on GitHub)
+    points[points == 0] = 1e-16
     points = broadcast_to(points, tuple(len(np.atleast_1d(x)) for x in statevar_dict.values()) + points.shape[-2:])
-    phase_output = func(*itertools.chain(statevar_grid, np.rollaxis(points, -1, start=0)))
+    # Explicit broadcasting to make things easier using Theano
+    bcasts = np.broadcast_arrays(*itertools.chain(statevar_grid, np.rollaxis(points, -1, start=0)))
+    phase_output = np.array(func(*bcasts))
 
     # Map the internal degrees of freedom to global coordinates
     # Normalize site ratios by the sum of site ratios times a factor
